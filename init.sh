@@ -70,7 +70,7 @@ hwclock -w
 echo "*/5 * * * * ntpdate ${ntp_server}" | crontab -
 
 # set docker config
-cat <<EOF | tee /etc/docker/daemon.json
+cat <<EOF > /etc/docker/daemon.json
 {
     "registry-mirrors": ["https://qqnn8qm9.mirror.aliyuncs.com"]
     "exec-opts": ["native.cgroupdriver=systemd"],
@@ -86,10 +86,11 @@ cat <<EOF | tee /etc/docker/daemon.json
 EOF
 
 systemctl enable docker
-systemctl start docker
+systemctl restart docker
 systemctl status docker -l 
-docker version
 
 systemctl enable kubelet
-systemctl start kubelet
-systemctl status kubelet -l 
+systemctl restart kubelet
+systemctl status kubelet -l
+
+echo "init finish"
