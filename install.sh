@@ -4,11 +4,11 @@
 #   this bash file exec in the master machine.
 #   before use this bash, must exec cmd like bellow:
 #
-#       yum install -y jq  or  apt install -y jq
 #       ssh-keygen -t rsa
 #       ssh-copy-id root@{{every node}}
 #
 ##########
+yum install -y jq
 
 CONFIG_FILE_CONTENT=$(cat config.json)
 HOSTS_CONTENT=""
@@ -39,7 +39,7 @@ do
     node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
     scp init.sh root@${node_ip}:/tmp/
     ssh root@${node_ip} bash <<EOF
-    bash /tmp/init.sh "${HOSTS_CONTENT}" 2>&1>./tmp/${node_ip}.log &
+    bash /tmp/init.sh "${HOSTS_CONTENT}" 2>&1>/tmp/${node_ip}.log &
 EOF
 done
 
