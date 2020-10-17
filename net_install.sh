@@ -52,7 +52,7 @@ done
 echo "ready to exec master script:  ${master_ip}"
 log_path="kube_install_${master_ip}.log"
 echo "if you want to see log, please see:  ${log_path}"
-bash init.sh "${HOSTS_CONTENT}" > ${log_path} 2>&1
+bash init.sh "${HOSTS_CONTENT}"
 
 kubeadm init \
     --apiserver-advertise-address=${master_ip} \
