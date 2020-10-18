@@ -7,10 +7,14 @@
 #       ssh-copy-id root@{{every node}}
 #
 ##########
-yum install -y jq
 
-CONFIG_FILE_CONTENT=$(cat config.json)
+FINISHED_TAG=">> install finished"
 HOSTS_CONTENT=""
+JOIN_CMD=""
+CONFIG_FILE_CONTENT=$(cat config.json)
+node_len=$(echo ${CONFIG_FILE_CONTENT} | jq '.node | length')
+
+yum install -y jq
 
 function add_host_record(){
     ip=$1
@@ -18,51 +22,80 @@ function add_host_record(){
     HOSTS_CONTENT="${HOSTS_CONTENT}\n${ip}  ${host}"
 }
 
+# install node
 function exec_remote_script(){
     ip=$1
-    scp init.sh root@${ip}:/tmp/
-    ssh root@${node_ip} bash <<EOF
-    bash /tmp/init.sh "${HOSTS_CONTENT}"
+    scp node.sh root@${ip}:/tmp/
+    ssh root@${ip} bash <<EOF
+    bash /tmp/node.sh "${HOSTS_CONTENT}"
+    ${JOIN_CMD}
+    echo ${FINISHED_TAG}
 EOF
 }
 
 function pre_exec_remote_script(){
     ip=$1
-    log_path="kube_install_${ip}.log"
+    log_path="kube_node_${ip}.log"
     echo "[async] ready to exec remote script:  ${ip}"
     echo "if you want to see remote log, please see:  ${log_path}"
     exec_remote_script ${ip} > ${log_path} 2>&1 &
 }
 
-master_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.hostname)
-master_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.ip)
-hostnamectl set-hostname ${master_hostname}
-add_host_record ${master_ip} ${master_hostname}
-
-node_len=$(echo ${CONFIG_FILE_CONTENT} | jq '.node | length')
-for((i=0;i<${node_len};i++))
-do
-    node_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].hostname")
-    node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
-    add_host_record ${node_ip} ${node_hostname}
-done
+function install_node(){
+    join_cmd=$(kubeadm token create --print-join-command 2>/dev/null)
+    for((i=0;i<${node_len};i++))
+    do
+        node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
+        pre_exec_remote_script ${node_ip}
+    done
+}
 
 
-# install master
-echo "ready to exec master script:  ${master_ip}"
-log_path="kube_install_${master_ip}.log"
-echo "if you want to see log, please see:  ${log_path}"
-bash init.sh "${HOSTS_CONTENT}"
+function set_master_hostname(){
+    master_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.hostname)
+    master_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.ip)
+    hostnamectl set-hostname ${master_hostname}
+    add_host_record ${master_ip} ${master_hostname}
 
-kubeadm init \
-    --apiserver-advertise-address=${master_ip} \
-    --image-repository registry.aliyuncs.com/google_containers \
-    --service-cidr=10.1.0.0/16 \
-    --pod-network-cidr=10.244.0.0/16
+    # save nodes hostname
+    for((i=0;i<${node_len};i++))
+    do
+        node_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].hostname")
+        node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
+        add_host_record ${node_ip} ${node_hostname}
+    done
+}
+function install_master(){
+    # install master
+    log_path="kube_install_${master_hostname}.log"
+    echo "ready to exec master script:  ${master_ip}"
+    echo "if you want to see log, please see:  ${log_path}"
+    bash master.sh "${HOSTS_CONTENT}" 2>&1 > ${log_path}
+    JOIN_CMD=$(kubeadm token create --print-join-command 2>/dev/null)
+}
 
-# install node
-#for((i=0;i<${node_len};i++))
-#do
-#    node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
-#    pre_exec_remote_script ${node_ip}
-#done
+# check node install result
+function check_node_progress(){
+    _node_logs=$1
+    for node_log in ${_node_logs}
+    do
+        _=$(tail -1 ${node_log} |grep "${FINISHED_TAG}")
+        if [[ $? -eq 0 ]];then
+            echo "[${node_log}] install finished"
+            _node_logs=$(echo ${_node_logs} | sed -e "s/${node_log}//")
+        else
+            echo "[${node_log}] install unfinished, wait to check again"
+            sleep 1
+            check_node_progress ${_node_logs}
+        fi
+    done
+}
+
+function main(){
+    set_master_hostname
+    install_master
+    install_node
+
+    node_logs=`ls kube_node_*.log`
+    check_node_progress "${node_logs}"
+}

@@ -60,7 +60,7 @@ yum install -y --nogpgcheck --disableexcludes=kubernetes \
                 docker-ce-cli \
                 kubelet \
                 kubeadm \
-                kubectl 
+                kubectl
 
 # ntp update time
 systemctl enable ntpd
@@ -70,27 +70,29 @@ hwclock -w
 echo "*/5 * * * * ntpdate ${ntp_server}" | crontab -
 
 # set docker config
+mkdir -p /etc/docker
 cat <<EOF > /etc/docker/daemon.json
 {
-    "registry-mirrors": ["https://qqnn8qm9.mirror.aliyuncs.com"]
+    "registry-mirrors": ["https://qqnn8qm9.mirror.aliyuncs.com"],
     "exec-opts": ["native.cgroupdriver=systemd"],
     "log-driver": "json-file",
     "log-opts": {
         "max-size": "100m"
-    },
-    "storage-driver": "overlay",
-    "storage-opts": [
-        "overlay2.override_kernel_check=true"
-    ]
+    }
 }
 EOF
 
 systemctl enable docker
 systemctl restart docker
-systemctl status docker -l 
+systemctl status docker -l
 
+cat <<EOF > /etc/sysconfig/kubelet
+KUBELET_EXTRA_ARGS=--cgroup-driver=systemd
+EOF
 systemctl enable kubelet
-systemctl restart kubelet
-systemctl status kubelet -l
 
-echo "init finish"
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+echo ">> finish"

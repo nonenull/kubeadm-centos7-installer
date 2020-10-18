@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bash init.sh
+bash init.sh $1
 kubeadm init \
     --image-repository registry.aliyuncs.com/google_containers \
     --service-cidr=10.1.0.0/16 \
