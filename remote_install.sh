@@ -70,7 +70,7 @@ function install_master(){
     log_path="kube_install_${master_hostname}.log"
     echo "ready to exec master script:  ${master_ip}"
     echo "if you want to see log, please see:  ${log_path}"
-    bash master.sh "${HOSTS_CONTENT}" 2>&1 > ${log_path}
+    bash master.sh "${HOSTS_CONTENT}" > ${log_path} 2>&1
     JOIN_CMD=$(kubeadm token create --print-join-command 2>/dev/null)
 }
 
