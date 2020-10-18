@@ -29,6 +29,9 @@ function exec_remote_script(){
     ssh root@${ip} bash <<EOF
     bash /tmp/node.sh "${HOSTS_CONTENT}"
     ${JOIN_CMD}
+    mkdir -p $HOME/.kube
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
     echo ${FINISHED_TAG}
 EOF
 }
@@ -42,7 +45,6 @@ function pre_exec_remote_script(){
 }
 
 function install_node(){
-    join_cmd=$(kubeadm token create --print-join-command 2>/dev/null)
     for((i=0;i<${node_len};i++))
     do
         node_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r ".node[${i}].ip")
@@ -71,6 +73,11 @@ function install_master(){
     echo "ready to exec master script:  ${master_ip}"
     echo "if you want to see log, please see:  ${log_path}"
     bash master.sh "${HOSTS_CONTENT}" > ${log_path} 2>&1
+
+    mkdir -p $HOME/.kube
+    cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    chown $(id -u):$(id -g) $HOME/.kube/config
+
     JOIN_CMD=$(kubeadm token create --print-join-command 2>/dev/null)
 }
 
