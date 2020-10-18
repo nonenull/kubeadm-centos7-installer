@@ -50,7 +50,6 @@ function install_node(){
     done
 }
 
-
 function set_master_hostname(){
     master_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.hostname)
     master_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.ip)
@@ -65,6 +64,7 @@ function set_master_hostname(){
         add_host_record ${node_ip} ${node_hostname}
     done
 }
+
 function install_master(){
     # install master
     log_path="kube_install_${master_hostname}.log"
@@ -94,6 +94,7 @@ function check_node_progress(){
 function main(){
     set_master_hostname
     install_master
+
     install_node
 
     node_logs=`ls kube_node_*.log`
