@@ -50,8 +50,6 @@ yum remove -y docker \
 
 yum makecache -y
 yum install -y --nogpgcheck --disableexcludes=kubernetes \
-                jq \
-                ntp \
                 yum-utils \
                 device-mapper-persistent-data \
                 lvm2 \
@@ -63,8 +61,6 @@ yum install -y --nogpgcheck --disableexcludes=kubernetes \
                 kubectl
 
 # ntp update time
-systemctl enable ntpd
-systemctl start ntpd
 ntpdate ${ntp_server}
 hwclock -w
 echo "*/5 * * * * ntpdate ${ntp_server}" | crontab -
