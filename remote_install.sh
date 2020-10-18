@@ -50,7 +50,7 @@ function install_node(){
     done
 }
 
-function set_master_hostname(){
+function set_hostname(){
     master_hostname=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.hostname)
     master_ip=$(echo ${CONFIG_FILE_CONTENT} | jq -r .master.ip)
     hostnamectl set-hostname ${master_hostname}
@@ -92,7 +92,7 @@ function check_node_progress(){
 }
 
 function main(){
-    set_master_hostname
+    set_hostname
     install_master
 
     install_node
