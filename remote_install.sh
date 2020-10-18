@@ -7,14 +7,14 @@
 #       ssh-copy-id root@{{every node}}
 #
 ##########
+yum install -y jq
 
 FINISHED_TAG=">> install finished"
 HOSTS_CONTENT=""
 JOIN_CMD=""
 CONFIG_FILE_CONTENT=$(cat config.json)
-node_len=$(echo ${CONFIG_FILE_CONTENT} | jq '.node | length')
 
-yum install -y jq
+node_len=$(echo ${CONFIG_FILE_CONTENT} | jq '.node | length')
 
 function add_host_record(){
     ip=$1
