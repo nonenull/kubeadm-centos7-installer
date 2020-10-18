@@ -99,3 +99,5 @@ function main(){
     node_logs=`ls kube_node_*.log`
     check_node_progress "${node_logs}"
 }
+
+main
