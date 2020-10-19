@@ -83,6 +83,6 @@ systemctl restart docker
 systemctl status docker -l
 
 cat <<EOF > /etc/sysconfig/kubelet
-KUBELET_EXTRA_ARGS=--cgroup-driver=systemd
+KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --feature-gates SupportPodPidsLimit=false --feature-gates SupportNodePidsLimit=false
 EOF
 systemctl enable kubelet
