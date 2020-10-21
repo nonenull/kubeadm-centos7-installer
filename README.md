@@ -35,7 +35,7 @@ bash install.sh
 
 ```
 
-## how to set config.json
+## config.json comment
 ```
 {
   "kubernetes_version": "1.19.3",           # set the kubenetes version, currently not working
