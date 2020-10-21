@@ -1,16 +1,36 @@
 {
-    "master": {
-        "hostname": "master1",
-        "ip": "192.168.87.130"
+  "kubernetes_version": "1.19.3",
+  "api_server_lb": {
+    "dns_name": "apiserver.k8s.xxxx.com",
+    "ip": "192.168.87.151",
+    "port": 6443
+  },
+  "master": [
+    {
+      "hostname": "master1.k8s.xxxx.com",
+      "ip": "192.168.87.147"
     },
-    "node": [
-        {
-            "hostname": "node1",
-            "ip": "192.168.87.133"
-        },
-        {
-            "hostname": "node2",
-            "ip": "192.168.87.132"
-        }
-    ]
+    {
+      "hostname": "master2.k8s.xxxx.com",
+      "ip": "192.168.87.152"
+    },
+    {
+      "hostname": "master3.k8s.xxxx.com",
+      "ip": "192.168.87.153"
+    }
+  ],
+  "node": [
+    {
+      "hostname": "node1.k8s.xxxx.com",
+      "ip": "192.168.87.149"
+    },
+    {
+      "hostname": "node2.k8s.xxxx.com",
+      "ip": "192.168.87.148"
+    },
+    {
+      "hostname": "node3.k8s.xxxx.com",
+      "ip": "192.168.87.150"
+    }
+  ]
 }
